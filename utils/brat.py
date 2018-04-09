@@ -10,13 +10,13 @@ def generate_ann(anotated):
             if charac=="<" and len(anotated)>x+4 and anotated[x+1:x+4] in pre_to_translate:       
                 if not anotated[x+1:x+4] in chest:
                     chest[anotated[x+1:x+4]] = list()
-                chest[anotated[x+1:x+4]].append({"sent":"","beg":i,"end":-1})
+                chest[anotated[x+1:x+4]].append({"sent":"","beg":x,"end":-1})
                 state = 4
                 inclu.append(True)
             elif len(anotated)>x+5 and anotated[x:x+2]=="</" and anotated[x+2:x+5] in pre_to_translate:              
                 for d in chest[anotated[x+2:x+5]]:
                     if d["end"]<0:
-                        d["end"]=i
+                        d["end"]=x
                 state = 5
                 inclu.remove(True)
             elif any(inclu):
