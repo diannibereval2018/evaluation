@@ -18,7 +18,7 @@ def generate_ann(anotated):
             elif len(anotated)>x+5 and anotated[x:x+2]=="</" and anotated[x+2:x+5] in pre_to_translate:              
                 for d in chest[anotated[x+2:x+5]]:
                     if d["end"]<0:
-                        d["end"]=x+i-z
+                        d["end"]=x-z
                 state = 5
                 inclu.remove(True)
                 z+=1
