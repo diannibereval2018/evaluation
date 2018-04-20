@@ -11,7 +11,7 @@ def generate_ann(anotated):
             if charac=="<" and len(anotated)>x+4 and anotated[x+1:x+4] in pre_to_translate:       
                 if not anotated[x+1:x+4] in chest:
                     chest[anotated[x+1:x+4]] = list()
-                chest[anotated[x+1:x+4]].append({"sent":"","beg":x+i-z,"end":-1})
+                chest[anotated[x+1:x+4]].append({"sent":"","beg":x-z,"end":-1})
                 state = 4
                 inclu.append(True)
                 z+=1
