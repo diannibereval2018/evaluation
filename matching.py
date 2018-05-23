@@ -41,17 +41,19 @@ system_text = []
 
 
 global_system_anotations    = {
-			"Disability":{"fp":0, "tp":0,"fn":0},
-			"Scope":{"fp":0, "tp":0,"fn":0},
-			"Neg":{"fp":0, "tp":0,"fn":0},
-            "Disability+Scope+Neg":{"fp":0, "tp":0,"fn":0}				
-                        }
+                "Disability":           {"fp":0, "tp":0,"fn":0},
+                "Scope":                {"fp":0, "tp":0,"fn":0},
+                "Neg":                  {"fp":0, "tp":0,"fn":0},
+                "Disability+Scope+Neg": {"fp":0, "tp":0,"fn":0},
+                "Disability+(Disability+Scope+Neg)": {"fp":0, "tp":0,"fn":0}
+                            }			
 errors = []
 print("\n\n")
 for fi in gs_files:
-    gs_text = open(sys.argv[1]+"/"+fi,"rb").read().decode("utf-8").strip().split("\n")
+    print(fi)
+    gs_text = open(sys.argv[1]+"/"+fi,"rb").read().decode("utf-8").strip().replace(" , ",", ").replace(" _ "," _").replace(" %","%").replace(" . ",". ").replace(" ) ",") ").replace(" ( "," (").replace(" : ",": ").replace(" ; ","; ").split("\n")
     try:
-        system_text = open(sys.argv[2]+"/"+fi,"rb").read().decode("utf-8").strip().split("\n")
+        system_text = open(sys.argv[2]+"/"+fi,"rb").read().decode("utf-8").strip().replace(" , ",", ").replace(" _ "," _").replace(" %","%").replace(" . ",". ").replace(" ) ",") ").replace(" ( "," (").replace(" : ",": ").replace(" ; ","; ").split("\n")
     except:
         print("LOG: File Not found: "+sys.argv[2]+"/"+fi)
         errors.append("File Not found: "+sys.argv[2]+"/"+fi)
@@ -63,29 +65,36 @@ for fi in gs_files:
         errors.append("Files must have the same number of lines:"+sys.argv[2]+"/"+fi)
         continue
 
+    def check(an_disa, an_system, term,acum):
+        for an in list(an_disa):
+            if an in an_system:
+                an_system.remove(an)
+                an_disa.remove(an)
+                if acum:
+                    global_system_anotations["Disability+(Disability+Scope+Neg)"]["tp"]+=1
+                global_system_anotations[term]["tp"] += 1
+            else:
+                if acum:
+                    global_system_anotations["Disability+(Disability+Scope+Neg)"]["fn"]+=1
+                global_system_anotations[term]["fn"] += 1
+
+        if acum:
+            global_system_anotations["Disability+(Disability+Scope+Neg)"]["fp"]+=len(an_system)
+        global_system_anotations[term]["fp"] += len(an_system)
+
+
     for l in range(len(gs_text)):
+        #Disability, Scope, Neg
         for term in ["Disability","Scope","Neg"]:
             an_disa    = [linea for linea in generate_ann(gs_text[l]).strip().split("\n")     if not linea=="" and term in linea.split("\t")[1]]
             an_system  = [linea for linea in generate_ann(system_text[l]).strip().split("\n") if not linea=="" and term in linea.split("\t")[1]]
-            for an in list(an_disa):
-                if an in an_system:
-                    an_system.remove(an)
-                    an_disa.remove(an)
-                    global_system_anotations[term]["tp"]+=1
-                else:
-                    global_system_anotations[term]["fn"]+=1
-            global_system_anotations[term]["fp"]+=len(an_system)
-        
+            check(an_disa,an_system,term,False)
+
+
+        # Disability+Scope+Neg
         an_disa   = re.findall(r'(\<scp\>(.+?)\<\/scp\>)',gs_text[l])
         an_system = re.findall(r'(\<scp\>(.+?)\<\/scp\>)',system_text[l])
-        for an in list(an_disa):
-            if an in an_system:
-               an_system.remove(an)
-               an_disa.remove(an)
-               global_system_anotations["Disability+Scope+Neg"]["tp"]+=1
-            else:
-               global_system_anotations["Disability+Scope+Neg"]["fn"]+=1
-        global_system_anotations["Disability+Scope+Neg"]["fp"]+=len(an_system)
+        check(an_disa, an_system, "Disability+Scope+Neg",True)
 
 
 print("\n\n\nResults:")
@@ -102,5 +111,4 @@ for x in global_system_anotations.keys():
 if not len(errors)==0:
     print(str(len(errors))+" files not evaluated.")
     print("\n- ".join(errors))
-
 
