@@ -45,7 +45,8 @@ global_system_anotations    = {
                 "Scope":                {"fp":0, "tp":0,"fn":0},
                 "Neg":                  {"fp":0, "tp":0,"fn":0},
                 "Disability+Scope+Neg": {"fp":0, "tp":0,"fn":0},
-                "Disability+(Disability+Scope+Neg)": {"fp":0, "tp":0,"fn":0}
+                "Disability+(Disability+Scope+Neg)": {"fp":0, "tp":0,"fn":0},
+                "Disability-Scope+Neg": {"fp":0, "tp":0,"fn":0}
                             }			
 errors = []
 print("\n\n")
@@ -91,6 +92,20 @@ for fi in gs_files:
             check(an_disa,an_system,term,False)
 
 
+        #Disability-Scope+Neg
+        an_disa    = [linea for linea in generate_ann(gs_text[l]).strip().split("\n")     if not linea==""  ]
+        a_eliminar = [(int(line.split("\t")[1].split(" ")[1]),int(line.split("\t")[1].split(" ")[2])) for line in an_disa if "Scope" in line]
+        an_system  = [linea for linea in generate_ann(system_text[l]).strip().split("\n")   if not linea=="" and "Disability" in linea.split("\t")[1]]
+        for elem in [an_disa,an_system]:
+            for item in elem:
+                    tab = item.split("\t")[1].split(" ")
+                    for i_x, f_x in a_eliminar:
+                        if i_x<=int(tab[1]) and f_x>=int(tab[2]) and item in elem:
+                            elem.remove(item)
+        an_disa = [ a for a in an_disa if "Disability" in a]
+        check(an_disa, an_system, "Disability-Scope+Neg",True)
+
+
         # Disability+Scope+Neg
         an_disa   = re.findall(r'(\<scp\>(.+?)\<\/scp\>)',gs_text[l])
         an_system = re.findall(r'(\<scp\>(.+?)\<\/scp\>)',system_text[l])
@@ -98,7 +113,7 @@ for fi in gs_files:
 
 
 print("\n\n\nResults:")
-for x in global_system_anotations.keys():
+for x in ["Disability","Disability+(Disability+Scope+Neg)","Disability+Scope+Neg"]:
     print("=========================================================")
     print(x+":")
     print("---------------------------------------------------------")
